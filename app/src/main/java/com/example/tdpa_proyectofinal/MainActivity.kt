@@ -9,24 +9,32 @@ import android.util.Log
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.example.tdpa_proyectofinal.databinding.ActivityMainBinding
-import java.io.Console
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         cargarImagen()
+
         binding.btnGuardar.setOnClickListener{
             insertar()
         }
+
         binding.btnBuscar.setOnClickListener{
                 encontrarNombre()
 
         }
+
         binding.btnBorrar.setOnClickListener{
             borrar()
+        }
+
+        binding.btnModificar.setOnClickListener{
+            modificar()
         }
 
     }
@@ -36,15 +44,16 @@ class MainActivity : AppCompatActivity() {
         Glide.with(applicationContext).load(imagenRandom).into(binding.imgPrincipal)
     }
     fun insertar(){
-        if (validarInsert()){
+        if (validarTodosCampos()){
             val admin = AdminSQLiteOpenHelper(this,"administracion",null,1)
             val db = admin.writableDatabase
             val registro = ContentValues()
 
             registro.put("nombre", binding.txtNombre.text.toString())
-            registro.put("nombre_materia", binding.txtNombreMateria.text.toString())
+            registro.put("nombreMateria", binding.txtNombreMateria.text.toString())
             registro.put("primerCal", binding.txtCal1.text.toString())
-            registro.put("segundaCal", binding.txtCal2.toString())
+            registro.put("segundaCal", binding.txtCal2.text.toString())
+            db.insert("estudiantes", null, registro)
             db.close()
 
             binding.txtNombre.setText("")
@@ -57,32 +66,32 @@ class MainActivity : AppCompatActivity() {
     }
     fun encontrarNombre(){
 
-        if (validarBuscar()){
+        if (validarNombre()){
             try{
                 val admin = AdminSQLiteOpenHelper(this,"administracion",null,1)
                 val db = admin.writableDatabase
                 var nom = binding.txtNombre.text
-                var fila = db.rawQuery("select * from "+
-                        "estudiantes where nombre='"+nom+"'",null)
+                var fila = db.rawQuery("SELECT nombreMateria, primerCal, segundaCal FROM estudiantes WHERE nombre='$nom'",null)
                 if (fila.moveToFirst()){
                     binding.txtNombreMateria.setText(fila.getString(0))
                     binding.txtCal1.setText(fila.getString(1))
                     binding.txtCal2.setText(fila.getString(2))
                 }
-                //else{
-                 //   Toast.makeText(this, "No se encontró el estudiante", Toast.LENGTH_SHORT).show()
-                //}
+                else{
+                    Toast.makeText(this, "No se encontró el estudiante", Toast.LENGTH_SHORT).show()
+                }
             }catch (e:Exception){
-                Log.d("mamadas", e.toString())
+                Log.d("findByNombre", e.toString())
             }
 
         }
     }
     fun borrar(){
-        if (validarBuscar()){
+        if (validarNombre()){
             val admin = AdminSQLiteOpenHelper(this,"administracion",null,1)
             val db = admin.writableDatabase
-            var cant = db.delete("estudiantes", "nombre=${binding.txtNombre.text.toString()}",null)
+            var nom = binding.txtNombre.text
+            var cant = db.delete("estudiantes", "nombre='$nom'",null)
             db.close()
             if (cant == 1){
                 Toast.makeText(this, "Se borró adecuadamente", Toast.LENGTH_SHORT).show()
@@ -96,7 +105,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private fun validarInsert(): Boolean{
+    fun modificar(){
+        if (validarTodosCampos()){
+            val admin = AdminSQLiteOpenHelper(this, "administracion", null, 1)
+            val bd = admin.writableDatabase
+            val registro = ContentValues()
+            registro.put("nombre", binding.txtNombre.text.toString())
+            registro.put("nombreMateria", binding.txtNombreMateria.text.toString())
+            registro.put("primerCal", binding.txtCal1.text.toString())
+            registro.put("segundaCal", binding.txtCal2.text.toString())
+            val cant = bd.update("estudiantes", registro, "nombre='${binding.txtNombre.text}'", null)
+            bd.close()
+            if(cant == 1){
+                Toast.makeText(this, "El estudiante se actualizó correctamente", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "No hubo coincidencia con ese nombre", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun validarTodosCampos(): Boolean{
         var valido = true
         if(TextUtils.isEmpty(binding.txtNombre.text.toString())){
             binding.txtNombre.error = "Coloca un nombre"
@@ -116,7 +143,7 @@ class MainActivity : AppCompatActivity() {
         }
         return valido
     }
-    private fun validarBuscar(): Boolean{
+    private fun validarNombre(): Boolean{
         var valido = true
         if(TextUtils.isEmpty(binding.txtNombre.text.toString())){
             binding.txtNombre.error = "Favor de poner un nombre"
