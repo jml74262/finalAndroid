@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="azulito_200">#c1e9e8</color>
+    <color name="azulito_500">#84cddb</color>
+    <color name="azulito_700">#091f29</color>
+    <color name="gris_500">#737a7d</color>
+    <color name="gris_200">#e5e5e5</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
