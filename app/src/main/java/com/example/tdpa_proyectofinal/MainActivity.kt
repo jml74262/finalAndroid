@@ -1,6 +1,7 @@
 package com.example.tdpa_proyectofinal
 
 import android.content.ContentValues
+import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -18,10 +19,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
         cargarImagen()
+
+        binding.btnAnalizar.setOnClickListener{
+            enviarDatos()
+        }
 
         binding.btnGuardar.setOnClickListener{
             insertar()
+
         }
 
         binding.btnBuscar.setOnClickListener{
@@ -87,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     fun borrar(){
-        if (validarNombre()){
+        if (validarBorrar()){
             val admin = AdminSQLiteOpenHelper(this,"administracion",null,1)
             val db = admin.writableDatabase
             var nom = binding.txtNombre.text
@@ -123,6 +130,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    fun enviarDatos(){
+        if (validarTodosCampos()){
+            val intento = Intent(this, resultados::class.java)
+            intento.putExtra("nombre",binding.txtNombre.text.toString())
+            intento.putExtra("nombreMateria",binding.txtNombreMateria.text.toString())
+            intento.putExtra("primerCal",binding.txtCal1.text.toString())
+            intento.putExtra("segundaCal",binding.txtCal2.text.toString())
+            startActivity(intento)
+        }
+
+    }
+
+    //VALIDACIONES//
     private fun validarTodosCampos(): Boolean{
         var valido = true
         if(TextUtils.isEmpty(binding.txtNombre.text.toString())){
@@ -163,4 +183,13 @@ class MainActivity : AppCompatActivity() {
         }
         return valido
     }
+    private fun validarBorrar(): Boolean{
+        var valido = true
+        if(TextUtils.isEmpty(binding.txtNombre.text.toString())){
+            binding.txtNombre.error = "Favor de poner un nombre"
+            valido = false
+        }
+        return valido
+    }
+
 }
