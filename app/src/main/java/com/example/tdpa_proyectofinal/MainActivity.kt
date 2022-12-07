@@ -10,6 +10,11 @@ import android.util.Log
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.example.tdpa_proyectofinal.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -20,7 +25,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        cargarImagen()
+        getImage()
 
         binding.btnAnalizar.setOnClickListener{
             enviarDatos()
@@ -49,6 +54,35 @@ class MainActivity : AppCompatActivity() {
         val urlImagenPrincipal = "https://picsum.photos/g/1920/1080?random"
         val imagenRandom:Uri = Uri.parse(urlImagenPrincipal)
         Glide.with(applicationContext).load(imagenRandom).into(binding.imgPrincipal)
+    }
+    private fun getImage(){
+        try {
+            CoroutineScope(Dispatchers.IO).launch {
+                val call = getRetrofit().create(ApiService::class.java).getImage()
+                val data = call.body()
+                runOnUiThread {
+                    if (call.isSuccessful) {
+                        try {
+                            val imagen:String? = data?.imagen
+                            val url: Uri = Uri.parse(imagen.toString())
+                            Glide.with(applicationContext).load(url).into(binding.imgPrincipal)
+                        } catch (e: Exception) {
+                            print(e)
+                        }
+                    } else {
+                        Toast.makeText(this@MainActivity, "Se guardó correctamente", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            print(e)
+        }
+    }
+    private fun getRetrofit(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://dog.ceo/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
     fun insertar(){
         if (validarTodosCampos()){
@@ -163,26 +197,26 @@ class MainActivity : AppCompatActivity() {
         }
         return valido
     }
-    private fun validarNombre(): Boolean{
-        var valido = true
-        if(TextUtils.isEmpty(binding.txtNombre.text.toString())){
-            binding.txtNombre.error = "Favor de poner un nombre"
-            valido = false
+        private fun validarNombre(): Boolean{
+            var valido = true
+            if(TextUtils.isEmpty(binding.txtNombre.text.toString())){
+                binding.txtNombre.error = "Favor de poner un nombre"
+                valido = false
+            }
+            if(!TextUtils.isEmpty(binding.txtNombreMateria.text.toString())){
+                binding.txtNombreMateria.error = "Favor de vaciar este campo"
+                valido = false
+            }
+            if(!TextUtils.isEmpty(binding.txtCal1.text.toString())){
+                binding.txtCal1.error = "Favor de vaciar este campo"
+                valido = false
+            }
+            if(!TextUtils.isEmpty(binding.txtCal2.text.toString())){
+                binding.txtCal2.error = "Favor de vaciar este campo"
+                valido = false
+            }
+            return valido
         }
-        if(!TextUtils.isEmpty(binding.txtNombreMateria.text.toString())){
-            binding.txtNombreMateria.error = "Favor de vaciar este campo"
-            valido = false
-        }
-        if(!TextUtils.isEmpty(binding.txtCal1.text.toString())){
-            binding.txtCal1.error = "Favor de vaciar este campo"
-            valido = false
-        }
-        if(!TextUtils.isEmpty(binding.txtCal2.text.toString())){
-            binding.txtCal2.error = "Favor de vaciar este campo"
-            valido = false
-        }
-        return valido
-    }
     private fun validarBorrar(): Boolean{
         var valido = true
         if(TextUtils.isEmpty(binding.txtNombre.text.toString())){

@@ -3,9 +3,15 @@ package com.example.tdpa_proyectofinal
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.example.tdpa_proyectofinal.databinding.ActivityMainBinding
 import com.example.tdpa_proyectofinal.databinding.ActivityResultadosBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class resultados : AppCompatActivity() {
     private lateinit var binding: ActivityResultadosBinding
@@ -14,7 +20,7 @@ class resultados : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityResultadosBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        cargarImagen()
+        getImage()
         logica()
 
     }
@@ -22,6 +28,35 @@ class resultados : AppCompatActivity() {
         val urlImagenPrincipal = "https://picsum.photos/g/1920/1080?random"
         val imagenRandom: Uri = Uri.parse(urlImagenPrincipal)
         Glide.with(applicationContext).load(imagenRandom).into(binding.imgSecunddaria)
+    }
+    private fun getImage(){
+        try {
+            CoroutineScope(Dispatchers.IO).launch {
+                val call = getRetrofit().create(ApiService::class.java).getImage()
+                val data = call.body()
+                runOnUiThread {
+                    if (call.isSuccessful) {
+                        try {
+                            val imagen:String? = data?.imagen
+                            val url: Uri = Uri.parse(imagen.toString())
+                            Glide.with(applicationContext).load(url).into(binding.imgSecunddaria)
+                        } catch (e: Exception) {
+                            print(e)
+                        }
+                    } else {
+                        Toast.makeText(this@resultados, "Se guardó correctamente", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            print(e)
+        }
+    }
+    private fun getRetrofit(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://dog.ceo/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
     fun logica(){
         val bundle = intent.extras
